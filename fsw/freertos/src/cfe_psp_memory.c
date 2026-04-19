@@ -25,6 +25,18 @@
 #define CFE_PSP_BOOT_RECORD_SIZE (sizeof(CFE_PSP_ReservedMemoryBootRecord_t))
 #define CFE_PSP_EXCEPTION_RECORD_SIZE (sizeof(CFE_PSP_ExceptionStorage_t))
 
+// This is how regular FreeRTOS marks its code sections
+// extern unsigned int _stext;
+// extern unsigned int _etext; 
+// #define CODE_START_ADDR ((cpuaddr)&_stext)
+// #define CODE_END_ADDR ((cpuaddr)&_etext)
+
+//This is how the esp-idf specific version of FreeRTOS marks its code section
+// because unfortunately the regular FreeRTOS stuff above will have undefined behavior on eps-idf
+extern unsigned int _instruction_reserved_start;
+extern unsigned int _instruction_reserved_end;
+#define CODE_START_ADDR ((cupaddr)&__instruction_reserved_start)
+#define CODE_END_ADDR ((cpuaddr)&_instruction_reserved_end)
 
 // cfe_psp_memory.h defines this type
 CFE_PSP_ReservedMemoryMap_t CFE_PSP_ReservedMemoryMap = { 0 }; 
@@ -37,7 +49,7 @@ char pspReservedMemoryAlloc[CFE_PSP_RESERVED_MEMORY_SIZE];
 
 
 // zero-initialize certain memory depending on the reset type
-int32 CFE_PSP_InitProcessorReservedMemory(uint32 reset_type){
+int32 CFE_PSP_stextProcessorReservedMemory(uint32 reset_type){
     // @FIXME not implemented yet
     // memory may persist or be zero-initialized depending on linker memory region .psp_reserved
     return CFE_PSP_SUCCESS;
@@ -100,6 +112,36 @@ void CFE_PSP_SetupReservedMemoryMap(void){
     CFE_PSP_ReservedMemoryMap.UserReservedMemory.BlockSize = CFE_PSP_USER_RESERVED_SIZE;
     ReservedMemoryAddr += UserReservedSize;
 }
+
+int32 CFE_PSP_GetKernelTextSegmentInfo(cpuaddr *PtrToCFESegment, uint32 *SizeOfCFESegment){
+    int32 return_code;
+
+    if (SizeOfCFESegment == NULL)
+    {
+        return_code = CFE_PSP_ERROR;
+    }
+    else
+    {
+        *PtrToCFESegment  = CODE_START_ADDR;
+        *SizeOfCFESegment = (uint32)(CODE_END_ADDR - CODE_START_ADDR);
+
+        return_code = CFE_PSP_SUCCESS;
+    }
+
+    return return_code;
+}
+
+int32 CFE_PSP_GetCFETextSegmentInfo(cpuaddr *PtrToCFESegment, uint32 *SizeOfCFESegment)
+{
+    int32 return_code;
+    return_code = CFE_PSP_ERROR;
+
+    //i think the CFE_PSP_MAIN_FUNCTION macro works for the start point of our cfe code
+    //but im not sure what would work as the end point
+
+    return return_code;
+}
+
 
 /*
 **
