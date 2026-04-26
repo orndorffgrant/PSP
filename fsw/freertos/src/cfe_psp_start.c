@@ -1,5 +1,6 @@
 #include "cfe_psp.h"
 #include "cfe_psp_config.h"
+#include "cfe_psp_memory.h"
 
 // target_config.h provides GLOBAL_CONFIGDATA object for CFE runtime settings
 #include <target_config.h>
@@ -16,7 +17,7 @@ int CFE_PSP_Setup(void){
 }
 
 void CFE_PSP_Panic(int32 ErrorCode){
-    __asm("bkpt 1");
+    // __asm("bkpt 1"); // invalid instruction on esp32
     // vTaskEndScheduler();
     OS_ApplicationExit(ErrorCode);
 }

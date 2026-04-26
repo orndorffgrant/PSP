@@ -11,6 +11,10 @@
 // target_config.h provides GLOBAL_CONFIGDATA object for CFE runtime settings
 #include <target_config.h>
 
+#include <string.h>
+
+#include "esp_attr.h"
+
 // memory regions
 #define CFE_PSP_CDS_SIZE (GLOBAL_CONFIGDATA.CfeConfig->CdsSize)
 #define CFE_PSP_RESET_AREA_SIZE (GLOBAL_CONFIGDATA.CfeConfig->ResetAreaSize)
@@ -19,7 +23,7 @@
 #define CFE_PSP_RAM_DISK_NUM_SECTORS (GLOBAL_CONFIGDATA.CfeConfig->RamDiskTotalSectors)
 
 // gross size of psp memory to be allocated
-#define CFE_PSP_RESERVED_MEMORY_SIZE 200 * 1024
+#define CFE_PSP_RESERVED_MEMORY_SIZE (512 * 1024)
 
 // memory record type sizes
 #define CFE_PSP_BOOT_RECORD_SIZE (sizeof(CFE_PSP_ReservedMemoryBootRecord_t))
@@ -35,23 +39,37 @@
 // because unfortunately the regular FreeRTOS stuff above will have undefined behavior on eps-idf
 extern unsigned int _instruction_reserved_start;
 extern unsigned int _instruction_reserved_end;
-#define CODE_START_ADDR ((cupaddr)&__instruction_reserved_start)
+#define CODE_START_ADDR ((cpuaddr)&_instruction_reserved_start)
 #define CODE_END_ADDR ((cpuaddr)&_instruction_reserved_end)
 
 // cfe_psp_memory.h defines this type
 CFE_PSP_ReservedMemoryMap_t CFE_PSP_ReservedMemoryMap = { 0 }; 
 
+// .psp_reserved not in the IDF linker script. need to add if this is necessary
+// putting in psram instead
 // allocate memory in a special memory region named ".psp_reserved" in linker script
 // @FIXME determine whether to place CDS, other regions in NVM or other memory
-__attribute__ ((section(".psp_reserved")))
+// __attribute__ ((section(".psp_reserved")))
 __attribute__ ((aligned (8)))
-char pspReservedMemoryAlloc[CFE_PSP_RESERVED_MEMORY_SIZE];
+EXT_RAM_BSS_ATTR char pspReservedMemoryAlloc[CFE_PSP_RESERVED_MEMORY_SIZE];
 
 
 // zero-initialize certain memory depending on the reset type
-int32 CFE_PSP_stextProcessorReservedMemory(uint32 reset_type){
-    // @FIXME not implemented yet
-    // memory may persist or be zero-initialized depending on linker memory region .psp_reserved
+int32 CFE_PSP_InitProcessorReservedMemory(uint32 reset_type)
+{
+    if (reset_type == CFE_PSP_RST_TYPE_POWERON)
+    {
+        PSP_DEBUG("CFE_PSP: Clearing Processor Reserved Memory.\n");
+        memset(CFE_PSP_ReservedMemoryMap.BootPtr, 0, sizeof(CFE_PSP_ReservedMemoryBootRecord_t));
+        memset(CFE_PSP_ReservedMemoryMap.ExceptionStoragePtr, 0, sizeof(CFE_PSP_ExceptionStorage_t));
+        memset(CFE_PSP_ReservedMemoryMap.ResetMemory.BlockPtr, 0, CFE_PSP_ReservedMemoryMap.ResetMemory.BlockSize);
+        memset(CFE_PSP_ReservedMemoryMap.VolatileDiskMemory.BlockPtr, 0, CFE_PSP_ReservedMemoryMap.VolatileDiskMemory.BlockSize);
+        memset(CFE_PSP_ReservedMemoryMap.CDSMemory.BlockPtr, 0, CFE_PSP_ReservedMemoryMap.CDSMemory.BlockSize);
+        memset(CFE_PSP_ReservedMemoryMap.UserReservedMemory.BlockPtr, 0, CFE_PSP_ReservedMemoryMap.UserReservedMemory.BlockSize);
+
+        CFE_PSP_ReservedMemoryMap.BootPtr->bsp_reset_type = CFE_PSP_RST_TYPE_PROCESSOR;
+    }
+
     return CFE_PSP_SUCCESS;
 }
 
@@ -82,13 +100,13 @@ void CFE_PSP_SetupReservedMemoryMap(void){
     RequiredSize += VolatileDiskSize;
     RequiredSize += CDSSize;
     RequiredSize += UserReservedSize;
-    OS_DebugPrintf("PSP reserved memory = %u bytes\n", (unsigned int) RequiredSize);
+    PSP_DEBUG("PSP reserved memory = %u bytes\n", (unsigned int) RequiredSize);
     if((unsigned int) RequiredSize > CFE_PSP_RESERVED_MEMORY_SIZE){
-        OS_DebugPrintf("Not enough memory available for PSP CFE reserved sections.\n");
+        PSP_DEBUG("Not enough memory available for PSP CFE reserved sections.\n");
         return;
     }
 
-    ReservedMemoryAddr = pspReservedMemoryAlloc;
+    ReservedMemoryAddr = (cpuaddr)pspReservedMemoryAlloc;
 
     CFE_PSP_ReservedMemoryMap.BootPtr = (void*) ReservedMemoryAddr;
     ReservedMemoryAddr += CFE_PSP_BOOT_RECORD_SIZE;

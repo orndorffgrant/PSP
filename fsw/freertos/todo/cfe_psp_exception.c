@@ -3,8 +3,8 @@
 #include <sys/types.h>
 #include "common_types.h"
 #include "osapi.h"
-#include "osapi-os-core.h"
-#include "osapi-os-filesys.h"
+// #include "osapi-os-core.h"
+// #include "osapi-os-filesys.h"
 
 
 int32 CFE_PSP_AttachExceptions(void){

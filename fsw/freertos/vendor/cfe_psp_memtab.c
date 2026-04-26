@@ -37,6 +37,7 @@
 #include "osapi.h"
 #include "cfe_psp.h"
 #include "cfe_psp_config.h"
+#include "cfe_psp_memory.h"
 
 /*
 ** Valid memory map for this target.
@@ -55,4 +56,3 @@ CFE_PSP_MemTable_t CFE_PSP_MemoryTable[CFE_PSP_MEM_TABLE_SIZE] =
    { CFE_PSP_MEM_INVALID, 0, 0, 0, CFE_PSP_MEM_ATTR_READWRITE },
    { CFE_PSP_MEM_INVALID, 0, 0, 0, CFE_PSP_MEM_ATTR_READWRITE },
 };
-
