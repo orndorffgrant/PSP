@@ -11,6 +11,8 @@
 // CFE needs a startup script file
 #define CFE_PSP_NONVOL_STARTUP_FILE (GLOBAL_CONFIGDATA.CfeConfig->NonvolStartupFile)
 
+uint32 CFE_PSP_SpacecraftId;
+uint32 CFE_PSP_CpuId;
 
 int CFE_PSP_Setup(void){
     return CFE_PSP_SUCCESS;
@@ -27,6 +29,9 @@ void OS_Application_Startup(void){
     int32 status;
     uint32 reset_type;
     uint32 reset_subtype;
+
+    CFE_PSP_SpacecraftId = 0xFF;    //TODO : give real value
+    CFE_PSP_CpuId = 0;              //TODO : give real value
 
     CFE_PSP_SetupReservedMemoryMap();
 

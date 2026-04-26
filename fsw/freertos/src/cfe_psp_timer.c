@@ -1,15 +1,17 @@
 #include "cfe_psp.h"
 #include "cfe_psp_config.h"
+#include "cfe_psp_memory.h"
 
-#define CFE_PSP_TIMER_TICKS_PER_SECOND ((int32) configTICK_RATE_HZ)
 
-// @FIXME research if this value for CFE_PSP_TIMER_LOW32_ROLLOVER is correct
-#define CFE_PSP_TIMER_LOW32_ROLLOVER 0
-
-uint32 CFE_PSP_GetTimerTicksPerSecond(void){
-    return CFE_PSP_TIMER_TICKS_PER_SECOND;
+void CFE_PSP_GetTime(OS_time_t *time){
+    time->ticks = esp_timer_get_time()*10;
+    //multiply by 10 because esp uses microseconds and cfs wants 100 nanoseconds
 }
 
-uint32 CFE_PSP_GetTimerLow32Rollover(void){
-    return CFE_PSP_TIMER_LOW32_ROLLOVER;
+void CFE_PSP_Get_Timebase(uint32 *tbu, uint32 *tbl){
+    uint64_t total_ticks = (uint64_t)esp_timer_get_time() * 10;
+
+    //split into upper 32 bits and lower 32 bits
+    *tbu = (uint32)(total_ticks >> 32);
+    *tbl = (uint32)(total_ticks & 0xFFFFFFFF);
 }

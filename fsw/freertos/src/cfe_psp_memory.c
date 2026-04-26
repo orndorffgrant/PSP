@@ -131,6 +131,19 @@ void CFE_PSP_SetupReservedMemoryMap(void){
     ReservedMemoryAddr += UserReservedSize;
 }
 
+/*--------------------------------------------------------------------------------------*/
+/**
+ * @brief Returns the location and size of the kernel memory.
+ *
+ * This function returns the start and end address of the kernel text segment.
+ * It may not be implemented on all architectures.
+ *
+ * @param[out] PtrToKernelSegment  Pointer to the variable that will store the location of the kernel text segment
+ * @param[out] SizeOfKernelSegment Pointer to the variable that will store the size of the kernel text segment
+ *
+ * @return 0 (OS_SUCCESS or CFE_PSP_SUCCESS) on success, -1 (OS_ERROR or CFE_PSP_ERROR) on error
+ * or CFE_PSP_ERROR_NOT_IMPLEMENTED if not implemented
+ */
 int32 CFE_PSP_GetKernelTextSegmentInfo(cpuaddr *PtrToCFESegment, uint32 *SizeOfCFESegment){
     int32 return_code;
 
@@ -149,6 +162,18 @@ int32 CFE_PSP_GetKernelTextSegmentInfo(cpuaddr *PtrToCFESegment, uint32 *SizeOfC
     return return_code;
 }
 
+/*--------------------------------------------------------------------------------------*/
+/**
+ * @brief Returns the location and size of the kernel memory.
+ *
+ * This function returns the start and end address of the CFE text segment. It
+ * may not be implemented on all architectures.
+ *
+ * @param[out] PtrToCFESegment  Pointer to the variable that will store the location of the cFE text segment
+ * @param[out] SizeOfCFESegment Pointer to the variable that will store the size of the cFE text segment
+ *
+ * @return 0 (OS_SUCCESS or CFE_PSP_SUCCESS) on success, -1 (OS_ERROR or CFE_PSP_ERROR) on error
+ */
 int32 CFE_PSP_GetCFETextSegmentInfo(cpuaddr *PtrToCFESegment, uint32 *SizeOfCFESegment)
 {
     int32 return_code;

@@ -6,7 +6,7 @@ add_library(psp-${CFE_PSP_TARGETNAME}-impl OBJECT
     vendor/cfe_psp_memtab.c
     todo/cfe_psp_exception.c
     todo/cfe_psp_support.c
-    todo/cfe_psp_timer.c
+    src/cfe_psp_timer.c
 )
 target_compile_definitions(psp-${CFE_SYSTEM_PSPNAME}-impl PRIVATE
     $<TARGET_PROPERTY:psp_module_api,INTERFACE_COMPILE_DEFINITIONS>
